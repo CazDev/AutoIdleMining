@@ -49,15 +49,10 @@ namespace AutoIdleMining
             String[] minerProcesses = { "ethminer" };
             String[] applicationPaths = { "c:\\start_miners.bat" };
 
-            SaveState.Values values = new SaveState.Values();
-            values.idleActivate = idleActivate;
-            values.minerProcesses = minerProcesses;
-            values.applicationPaths = applicationPaths;
-
             while (IdleCounting)
             {
                 uint idleTime = IdleTimeFinder.GetIdleTime();
-                Console.WriteLine(" Idle time: " + idleTime + "ms        ");
+                Console.WriteLine("Idle time: " + idleTime + "ms        ");
                 Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop-1);
 
                 if (idleTime > idleActivate)
@@ -67,7 +62,7 @@ namespace AutoIdleMining
                         Process[] pname = Process.GetProcessesByName(miner);
                         if (pname.Length == 0)
                         {
-                            Console.WriteLine("\n\n You are now AFK...\n");
+                            Console.WriteLine("\n\nYou are now AFK...\n");
 
                             foreach (String path in applicationPaths)
                             {
@@ -89,7 +84,7 @@ namespace AutoIdleMining
                     {
                         foreach (var process in Process.GetProcessesByName(miner))
                         {
-                            Console.WriteLine("\n\n Welcome back\n");
+                            Console.WriteLine("\n\nWelcome back\n");
                             process.Kill();
                         }
                     }
