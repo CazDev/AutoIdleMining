@@ -1,59 +1,88 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace AutoIdleMining
 {
     class Program
     {
-        [Flags]
-        public enum ThreadAccess : int
-        {
-            TERMINATE = (0x0001),
-            SUSPEND_RESUME = (0x0002),
-            GET_CONTEXT = (0x0008),
-            SET_CONTEXT = (0x0010),
-            SET_INFORMATION = (0x0020),
-            QUERY_INFORMATION = (0x0040),
-            SET_THREAD_TOKEN = (0x0080),
-            IMPERSONATE = (0x0100),
-            DIRECT_IMPERSONATION = (0x0200)
-        }
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
-        [DllImport("kernel32.dll")]
-        static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
-        [DllImport("kernel32.dll")]
-        static extern uint SuspendThread(IntPtr hThread);
-        [DllImport("kernel32.dll")]
-        static extern int ResumeThread(IntPtr hThread);
-        [DllImport("kernel32", CharSet = CharSet.Auto, SetLastError = true)]
-        static extern bool CloseHandle(IntPtr handle);
+        [DllImport("Kernel32")]
+        private static extern IntPtr GetConsoleWindow();
+
+        const int SW_HIDE = 0;
+        const int SW_SHOW = 5;
 
         static bool IdleCounting = true;
 
         static void Main(string[] args)
         {
-            IdleCount();
+            // Send to System Tray
+            NotifyIcon trayIcon = new NotifyIcon();
+            trayIcon.Text = "AutoIdleMine";
+            trayIcon.Icon = new Icon(AutoIdleMining.Properties.Resources.coin, 40, 40);
+
+            ContextMenu trayMenu = new ContextMenu();
+
+            trayMenu.MenuItems.Add("Show", Show_Click);
+            trayMenu.MenuItems.Add("Hide", Hide_Click);
+            trayMenu.MenuItems.Add("Exit", Exit_Click);
+
+            trayIcon.ContextMenu = trayMenu;
+            trayIcon.Visible = true;
+
+            // Console settings
+            Console.SetWindowSize(40, 15);
+            Console.Title = "AutoIdleMine";
+
+            // Start main loop
+            Thread mainThread = new Thread(IdleCount);
+            mainThread.Start();
+
+            //Start ContextMenu for Tray Icon
+            Application.Run();
+        }
+
+        static void Show_Click(object sender, EventArgs e)
+        {
+            IntPtr hwnd;
+            hwnd = GetConsoleWindow();
+            ShowWindow(hwnd, SW_SHOW);
+        }
+
+        static void Hide_Click(object sender, EventArgs e)
+        {
+            IntPtr hwnd;
+            hwnd = GetConsoleWindow();
+            ShowWindow(hwnd, SW_HIDE);
+        }
+
+        static void Exit_Click(object sender, EventArgs e)
+        {
+            Environment.Exit(0);
         }
 
         private static void IdleCount()
         {
             int idleActivate = 3000;
 
-            String[] minerProcesses = { "ethminer" };
-            String[] applicationPaths = { "c:\\start_miners.bat" };
+            String[] minerProcesses = { "xmrig", "phoenixminer-eth" };
 
             while (IdleCounting)
             {
                 uint idleTime = IdleTimeFinder.GetIdleTime();
+                Console.SetCursorPosition(0, 0);
                 Console.WriteLine("Idle time: " + idleTime + "ms        ");
-                Console.SetCursorPosition(Console.CursorLeft, Console.CursorTop-1);
 
                 if (idleTime > idleActivate)
                 {
@@ -62,29 +91,20 @@ namespace AutoIdleMining
                         Process[] pname = Process.GetProcessesByName(miner);
                         if (pname.Length == 0)
                         {
-                            Console.WriteLine("\n\nYou are now AFK...\n");
-
-                            foreach (String path in applicationPaths)
-                            {
-                                // Start invisible window
-                                Process proc = new Process();
-                                proc.StartInfo.FileName = path;
-                                proc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                                proc.StartInfo.CreateNoWindow = true;
-                                proc.StartInfo.RedirectStandardOutput = true;
-                                proc.StartInfo.UseShellExecute = false;
-                                proc.Start();
-                            }
+                            Console.SetCursorPosition(0, 1);
+                            Console.WriteLine("You are now AFK...");
                         }
                     }
                 }
                 else
                 {
+
                     foreach (String miner in minerProcesses)
                     {
                         foreach (var process in Process.GetProcessesByName(miner))
                         {
-                            Console.WriteLine("\n\nWelcome back\n");
+                            Console.SetCursorPosition(0, 1);
+                            Console.WriteLine("Activity Detected!");
                             process.Kill();
                         }
                     }
