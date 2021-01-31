@@ -14,19 +14,13 @@ namespace AutoIdleMining
 {
     class Program
     {
-        [DllImport("user32.dll")]
-        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        [DllImport("Kernel32")]
-        private static extern IntPtr GetConsoleWindow();
-
-        const int SW_HIDE = 0;
-        const int SW_SHOW = 5;
 
         static bool IdleCounting = true;
 
         static void Main(string[] args)
         {
+            SaveState.LoadConfig();
+
             // Send to System Tray
             NotifyIcon trayIcon = new NotifyIcon();
             trayIcon.Text = "AutoIdleMine";
@@ -34,37 +28,29 @@ namespace AutoIdleMining
 
             ContextMenu trayMenu = new ContextMenu();
 
-            trayMenu.MenuItems.Add("Show", Show_Click);
-            trayMenu.MenuItems.Add("Hide", Hide_Click);
+            trayMenu.MenuItems.Add("Open config", OpenConfig_Click);
+            trayMenu.MenuItems.Add("Reload", Reload_Click);
             trayMenu.MenuItems.Add("Exit", Exit_Click);
 
             trayIcon.ContextMenu = trayMenu;
             trayIcon.Visible = true;
 
-            // Console settings
-            Console.SetWindowSize(40, 15);
-            Console.Title = "AutoIdleMine";
-
             // Start main loop
             Thread mainThread = new Thread(IdleCount);
             mainThread.Start();
 
-            //Start ContextMenu for Tray Icon
             Application.Run();
         }
 
-        static void Show_Click(object sender, EventArgs e)
+        static void Reload_Click(object sender, EventArgs e)
         {
-            IntPtr hwnd;
-            hwnd = GetConsoleWindow();
-            ShowWindow(hwnd, SW_SHOW);
+            Application.Restart();
+            Environment.Exit(0);
         }
 
-        static void Hide_Click(object sender, EventArgs e)
+        static void OpenConfig_Click(object sender, EventArgs e)
         {
-            IntPtr hwnd;
-            hwnd = GetConsoleWindow();
-            ShowWindow(hwnd, SW_HIDE);
+            Process.Start("notepad.exe", SaveState.ConfigPath);
         }
 
         static void Exit_Click(object sender, EventArgs e)
@@ -74,43 +60,25 @@ namespace AutoIdleMining
 
         private static void IdleCount()
         {
-            int idleActivate = 3000;
-
             String[] minerProcesses = { "xmrig", "phoenixminer-eth" };
 
             while (IdleCounting)
             {
                 uint idleTime = IdleTimeFinder.GetIdleTime();
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("Idle time: " + idleTime + "ms        ");
 
-                if (idleTime > idleActivate)
-                {
-                    foreach (String miner in minerProcesses)
-                    {
-                        Process[] pname = Process.GetProcessesByName(miner);
-                        if (pname.Length == 0)
-                        {
-                            Console.SetCursorPosition(0, 1);
-                            Console.WriteLine("You are now AFK...");
-                        }
-                    }
-                }
-                else
+                if (idleTime < SaveState.values.idleActivate)
                 {
 
                     foreach (String miner in minerProcesses)
                     {
                         foreach (var process in Process.GetProcessesByName(miner))
                         {
-                            Console.SetCursorPosition(0, 1);
-                            Console.WriteLine("Activity Detected!");
                             process.Kill();
                         }
                     }
                 }
 
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
             }
         }
     }
