@@ -15,9 +15,13 @@ namespace AutoIdleMining
     class Program
     {
 
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+
         static bool IdleCounting = true;
 
-        static void Main(string[] args)
+        static void Main()
         {
             SaveState.LoadConfig();
 
@@ -83,7 +87,7 @@ namespace AutoIdleMining
         }
     }
 
-        internal struct LASTINPUTINFO
+    internal struct LASTINPUTINFO
     {
         public uint cbSize;
 

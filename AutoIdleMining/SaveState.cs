@@ -30,7 +30,7 @@ namespace AutoIdleMining
 
             //Values
             state.idleActivate = 30000;
-            state.minerProcesses =  new string[] { "xmrig", "phoenixminer-eth" };
+            state.minerProcesses = new string[] { "xmrig", "phoenixminer-eth" };
 
             //writes values to config
             WriteConfig(state);
