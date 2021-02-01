@@ -77,7 +77,11 @@ namespace AutoIdleMining
                     {
                         foreach (var process in Process.GetProcessesByName(miner))
                         {
-                            process.Kill();
+                            try
+                            {
+                                process.Kill();
+                            }
+                            catch { }
                         }
                     }
                 }
