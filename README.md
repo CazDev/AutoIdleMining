@@ -2,6 +2,8 @@
 
 A small console app to mine crypto while Windows is idle
 
+This branch is to be used as an add-on to betterhash
+
 # This branch is only for use with BetterHash
 
 Change the following to use this:
