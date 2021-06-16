@@ -64,7 +64,7 @@ namespace AutoIdleMining
 
         private static void IdleCount()
         {
-            String[] minerProcesses = { "xmrig", "phoenixminer-eth" };
+            String[] minerProcesses = { "xmrig", "phoenixminer-eth" "cons" };
 
             while (IdleCounting)
             {
